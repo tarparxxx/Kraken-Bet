@@ -1,0 +1,120 @@
+🔹 1. Подключение UUID-генератора
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+
+📌 Что делает: подключает расширение PostgreSQL, которое позволяет использовать функцию uuid_generate_v4() — генератор случайных UUID.
+
+📌 Зачем нужно: чтобы не хранить ID как INT AUTO_INCREMENT, а использовать UUID — безопаснее, не спуфится, удобно в распределённых системах.
+
+🔹 2. Таблица users
+CREATE TABLE IF NOT EXISTS users (
+   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+   username VARCHAR(50) UNIQUE NOT NULL,
+   password_hash TEXT NOT NULL,
+   created_at TIMESTAMP DEFAULT NOW(),
+   updated_at TIMESTAMP DEFAULT NOW()
+);
+
+Поле	Тип	Смысл
+id	UUID	PK, генерится автоматически
+username	VARCHAR(50)	логин, уникальный
+password_hash	TEXT	пароль в захэшированном виде
+created_at	TIMESTAMP	время регистрации
+updated_at	TIMESTAMP	время последнего обновления
+
+✅ Отличная структура — логин + hash + timestamps
+⚠️ В Java мы должны хранить пароль в SHA-256 / BCrypt.
+
+🔹 3. Таблица wallet (1 к 1 с user)
+CREATE TABLE IF NOT EXISTS wallet (
+   user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+   balance NUMERIC(14, 2) NOT NULL DEFAULT 0 CHECK (balance >= 0)
+);
+
+Поле	Тип	Смысл
+user_id	UUID	PK + FK на users.id
+balance	NUMERIC	деньги (точный decimal, не double!)
+
+📌 ON DELETE CASCADE — если удалить юзера, кошелёк удалится сам.
+📌 CHECK (balance >= 0) — нельзя уйти в минус.
+
+🔹 4. Таблица bets (ставки)
+CREATE TABLE IF NOT EXISTS bets (
+   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+   amount NUMERIC(14, 2) NOT NULL CHECK (amount > 0),
+   is_win BOOLEAN NOT NULL,
+   created_at TIMESTAMP DEFAULT NOW()
+);
+
+Поле	Смысл
+id	UUID, PK
+user_id	FK на users
+amount	сумма ставки
+is_win	выиграл true/false
+created_at	время ставки
+
+📌 CHECK (amount > 0) — ставка должна быть положительной.
+📌 Логично — каждая ставка привязана к юзеру.
+
+🔹 5. Индекс для быстрых запросов
+CREATE INDEX idx_bets_user_id ON bets(user_id);
+
+
+🔍 Ускоряет выборку:
+
+SELECT * FROM bets WHERE user_id = ?
+
+
+Без индекса — медленно на большом объёме.
+
+🔹 6. Таблица transactions (история операций)
+CREATE TABLE IF NOT EXISTS transactions (
+   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+   type VARCHAR(20) NOT NULL CHECK (type IN ('DEPOSIT', 'WITHDRAW', 'BET', 'WIN')),
+   amount NUMERIC(14, 2) NOT NULL CHECK (amount <> 0),
+   created_at TIMESTAMP DEFAULT NOW()
+);
+
+
+📌 Используется для истории событий в кошельке, например:
+
+type	пример
+DEPOSIT	пополнение
+WITHDRAW	вывод
+BET	ставка (списание)
+WIN	выигрыш (пополнение)
+
+⚠️ CHECK (amount <> 0) — не допускаем нулевые транзакции.
+
+🔹 7. Триггер на автообновление updated_at
+CREATE OR REPLACE FUNCTION update_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+📌 Функция, которая обновляет поле updated_at при UPDATE.
+
+CREATE TRIGGER trg_users_update
+    BEFORE UPDATE ON users
+    FOR EACH ROW EXECUTE FUNCTION update_timestamp();
+
+
+📌 Триггер: перед изменением пользователя → обновляет updated_at.
+
+🔥 Теперь UPDATE users SET username = ... → timestamp обновится сам.
+
+✅ Итог: зачем всё это?
+Возможность	Где реализовано
+Безопасный ID	UUID everywhere
+Отдельный кошелёк	wallet
+История операций	transactions
+История ставок	bets
+No negative balance	CHECK constraint
+Auto updated timestamps	trigger
+Быстрый SELECT по юзеру	INDEX
