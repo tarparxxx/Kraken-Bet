@@ -7,17 +7,17 @@ import java.util.UUID;
 public class Bet {
     private UUID id;
     private UUID userId;
-    private BigDecimal balance;
+    private BigDecimal amount;
     private boolean isWin;
     private LocalDateTime createdAt;
 
     public Bet() {
     }
 
-    public Bet(UUID id, UUID userId, BigDecimal balance, boolean isWin, LocalDateTime createdAt) {
+    public Bet(UUID id, UUID userId, BigDecimal amount, boolean isWin, LocalDateTime createdAt) {
         this.id = id;
         this.userId = userId;
-        this.balance = balance;
+        this.amount = amount;
         this.isWin = isWin;
         this.createdAt = createdAt;
     }
@@ -30,8 +30,8 @@ public class Bet {
         return userId;
     }
 
-    public BigDecimal getBalance() {
-        return balance;
+    public BigDecimal getAmount() {
+        return amount;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -48,8 +48,8 @@ public class Bet {
         this.id = id;
     }
 
-    public void setBalance(BigDecimal balance) {
-        this.balance = balance;
+    public void setAmount(BigDecimal balance) {
+        this.amount = amount;
     }
 
     public void setWin(boolean isWin) {
@@ -65,7 +65,7 @@ public class Bet {
         return "Bet{" +
                 "id=" + id +
                 ", userId=" + userId +
-                ", balance=" + balance +
+                ", amount=" + amount +
                 ", isWin=" + isWin +
                 ", createdAt=" + createdAt +
                 "}";

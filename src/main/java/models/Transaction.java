@@ -9,13 +9,15 @@ public class Transaction {
     private UUID userId;
     private BigDecimal amount;
     private LocalDateTime createdAt;
+    private TransactionType type;
 
     public Transaction() {
     }
 
-    public Transaction(UUID id, UUID userId, BigDecimal amount, LocalDateTime createdAt) {
+    public Transaction(UUID id, UUID userId, TransactionType type, BigDecimal amount, LocalDateTime createdAt) {
         this.id = id;
         this.userId = userId;
+        this.type = type;
         this.amount = amount;
         this.createdAt = createdAt;
     }
@@ -36,6 +38,8 @@ public class Transaction {
         return createdAt;
     }
 
+    public TransactionType getType() { return type; }
+
     public void setId(UUID id) {
         this.id = id;
     }
@@ -51,6 +55,8 @@ public class Transaction {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
+
+    public void setType(TransactionType type) { this.type = type; }
 
     @Override
     public String toString() {
