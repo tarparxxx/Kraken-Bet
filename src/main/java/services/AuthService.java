@@ -1,17 +1,17 @@
 package services;
 
 import models.User;
-import models.Wallet;
 import repository.UserRepository;
 import repository.WalletRepository;
+import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
+@Service
 public class AuthService {
 
     private final UserRepository userRepository;
@@ -23,26 +23,22 @@ public class AuthService {
     }
 
     public User register(String username, String password) {
-        // Проверка: существует ли логин
         Optional<User> existing = userRepository.findByUsername(username);
         if (existing.isPresent()) {
-            return null; // username занят
+            return null;
         }
 
-        // Создаём пользователя
         User user = new User(
                 UUID.randomUUID(),
                 username,
-                hashPassword(password),
+                hash(password),
                 LocalDateTime.now(),
                 LocalDateTime.now()
         );
 
-        // Сохраняем в БД
         userRepository.save(user);
 
-        // Создаём кошелёк
-        walletRepository.createWallet(user.getId());
+        walletRepository.save(new models.Wallet(user.getId(), java.math.BigDecimal.ZERO));
 
         return user;
     }
@@ -51,34 +47,27 @@ public class AuthService {
         Optional<User> existing = userRepository.findByUsername(username);
 
         if (existing.isEmpty()) {
-            return null; // User not found
+            return null;
         }
 
-        User user = existing.get();
-
-        // Проверяем hash пароля
-        if (user.getPasswordHash().equals(hashPassword(password))) {
-            return user;
-        }
-
-        return null; // wrong password
+        User u = existing.get();
+        return u.getPasswordHash().equals(hash(password)) ? u : null;
     }
 
-    private String hashPassword(String password) {
+    private String hash(String text) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(password.getBytes(StandardCharsets.UTF_8));
+            byte[] arr = digest.digest(text.getBytes(StandardCharsets.UTF_8));
 
-            // переводим байты в hex строку
-            StringBuilder hex = new StringBuilder();
-            for (byte b : hash) {
-                hex.append(String.format("%02x", b));
-            }
-            return hex.toString();
+            StringBuilder sb = new StringBuilder();
+            for (byte b : arr) sb.append(String.format("%02x", b));
 
-        } catch (NoSuchAlgorithmException e) {
+            return sb.toString();
+
+        } catch (Exception e) {
             throw new RuntimeException("Hash error: " + e.getMessage(), e);
         }
     }
 }
+
 

@@ -1,11 +1,16 @@
 package repository;
 
 import models.Transaction;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
 import java.util.List;
 import java.util.UUID;
 
-public interface TransactionRepository {
-    Transaction save(Transaction transaction);
-    List<Transaction> findByUserId(UUID userId);
+@Repository
+public interface TransactionRepository extends JpaRepository<Transaction, UUID> {
+
+    List<Transaction> findByUserIdOrderByCreatedAtDesc(UUID userId);
 }
+
 

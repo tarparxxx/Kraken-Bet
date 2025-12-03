@@ -1,6 +1,7 @@
 package services;
 
 import models.Bet;
+import org.springframework.stereotype.Service;
 import repository.BetRepository;
 
 import java.math.BigDecimal;
@@ -9,6 +10,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
+@Service
 public class BetService {
 
     private final BetRepository betRepository;
@@ -21,35 +23,30 @@ public class BetService {
     }
 
     public Bet placeBet(UUID userId, BigDecimal amount) {
-        // 1. Проверяем баланс / списываем деньги
+
         boolean ok = walletService.spendForBet(userId, amount);
-        if (!ok) {
-            return null; // недостаточно средств
+        if (!ok) return null;
+
+        boolean win = random.nextBoolean();
+
+        if (win) {
+            walletService.addWin(userId, amount);
         }
 
-        // 2. Генерируем результат игры (50/50)
-        boolean isWin = random.nextBoolean();
-
-        // 3. Начисляем выигрыш
-        if (isWin) {
-            walletService.addWin(userId, amount); // выигрыш = 1:1
-        }
-
-        // 4. Создаём запись ставки
         Bet bet = new Bet(
                 UUID.randomUUID(),
                 userId,
                 amount,
-                isWin,
+                win,
                 LocalDateTime.now()
         );
 
-        // 5. Сохраняем в БД
         return betRepository.save(bet);
     }
 
     public List<Bet> getHistory(UUID userId) {
-        return betRepository.findByUserId(userId);
+        return betRepository.findByUserIdOrderByCreatedAtDesc(userId);
     }
 }
+
 

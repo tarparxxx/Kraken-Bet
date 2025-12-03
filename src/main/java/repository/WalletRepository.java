@@ -1,13 +1,16 @@
 package repository;
 
 import models.Wallet;
-import java.math.BigDecimal;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
 import java.util.Optional;
 import java.util.UUID;
 
-public interface WalletRepository {
-    void createWallet(UUID userId);
+@Repository
+public interface WalletRepository extends JpaRepository<Wallet, UUID> {
+
     Optional<Wallet> findByUserId(UUID userId);
-    boolean updateBalance(UUID userId, BigDecimal newBalance);
 }
+
 

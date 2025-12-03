@@ -1,10 +1,18 @@
 package models;
 
+import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+@Entity
+@Table(name = "wallet")
 public class Wallet {
+
+    @Id
+    @Column(name = "user_id")
     private UUID userId;
+
+    @Column(nullable = false)
     private BigDecimal balance;
 
     public Wallet() {

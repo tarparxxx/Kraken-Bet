@@ -1,14 +1,27 @@
 package models;
 
+import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Entity
+@Table(name = "bets")
 public class Bet {
+
+    @Id
     private UUID id;
+
+    @Column(name = "user_id", nullable = false)
     private UUID userId;
+
+    @Column(nullable = false)
     private BigDecimal amount;
+
+    @Column(name = "is_win", nullable = false)
     private boolean isWin;
+
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
     public Bet() {

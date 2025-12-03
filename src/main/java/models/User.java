@@ -1,13 +1,26 @@
 package models;
 
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Entity
+@Table(name = "users")
 public class User {
+
+    @Id
     private UUID id;
+
+    @Column(nullable = false, unique = true, length = 50)
     private String username;
+
+    @Column(name = "password_hash", nullable = false)
     private String passwordHash;
+
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
     public User() {

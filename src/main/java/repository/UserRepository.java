@@ -1,16 +1,16 @@
 package repository;
 
 import models.User;
-import java.util.List;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
 import java.util.Optional;
 import java.util.UUID;
 
-public interface UserRepository {
-    User save(User user);
-    Optional<User> findById(UUID id);
+@Repository
+public interface UserRepository extends JpaRepository<User, UUID> {
+
     Optional<User> findByUsername(String username);
-    List<User> findAll();
-    boolean update(User user);
-    boolean delete(UUID id);
 }
+
 

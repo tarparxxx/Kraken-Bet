@@ -1,14 +1,28 @@
 package models;
 
+import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Entity
+@Table(name = "transactions")
 public class Transaction {
+
+    @Id
     private UUID id;
+
+    @Column(name = "user_id", nullable = false)
     private UUID userId;
+
+    @Column(nullable = false)
     private BigDecimal amount;
+
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private TransactionType type;
 
     public Transaction() {
